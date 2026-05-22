@@ -4,6 +4,9 @@ import re
 import argparse
 from PyQt5.QtWidgets import QApplication, QFileDialog
 
+# Get the directory where this script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 def get_filename():
     """Opens a file dialog and returns the selected filename."""
     app = QApplication(sys.argv)
@@ -17,7 +20,7 @@ def get_filename():
 def validate_script_lines(lines):
     """
     Validate the script lines.
-    
+
     Expected structure:
       - An empty line: resets the block state.
       - Lines starting with '#' are comments and are skipped.
@@ -65,7 +68,7 @@ def validate_script_lines(lines):
                         dur_str = dur_str.strip()
                         sound_name = sound_marker.strip()
                         # Check that the sound effect file exists.
-                        sound_path = os.path.join("..", "assets", "sounds", "mp3", f"{sound_name}.mp3")
+                        sound_path = os.path.join(script_dir, "..", "assets", "sounds", "mp3", f"{sound_name}.mp3")
                         if not os.path.isfile(sound_path):
                             errors.append(f"Line {idx}: Sound effect '{sound_name}' does not exist at expected location: {sound_path}")
                     else:

@@ -2,8 +2,11 @@ import os
 from moviepy.editor import VideoFileClip, AudioFileClip, CompositeAudioClip
 
 def add_sounds(filename):
+    # Get the directory where this script is located
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
     # Load the video file
-    video = VideoFileClip("output.mp4")
+    video = VideoFileClip(os.path.join(script_dir, "output.mp4"))
     duration = 0
     audio_clips = []
 
@@ -19,7 +22,7 @@ def add_sounds(filename):
                 if "#!" in line:
                     parts = line.split('$^')
                     duration_part, sound_part = parts[1].split("#!")
-                    audio_file = f'../assets/sounds/mp3/{sound_part.strip()}.mp3'
+                    audio_file = os.path.join(script_dir, '..', 'assets', 'sounds', 'mp3', f'{sound_part.strip()}.mp3')
                     audio_clip = AudioFileClip(audio_file).set_start(duration)
                     audio_clips.append(audio_clip)
                     duration += float(duration_part)
@@ -32,18 +35,18 @@ def add_sounds(filename):
                 if "#!" in line:
                     parts = line.split('$^')
                     duration_part, sound_part = parts[1].split("#!")
-                    audio_file = f'../assets/sounds/mp3/{sound_part.strip()}.mp3'
+                    audio_file = os.path.join(script_dir, '..', 'assets', 'sounds', 'mp3', f'{sound_part.strip()}.mp3')
                     audio_clip = AudioFileClip(audio_file).set_start(duration)
                     audio_clips.append(audio_clip)
                     duration += float(duration_part)
                 else:
                     duration += float(line.split('$^')[1])
-                    
+
     if len(audio_clips) > 0:
         composite_audio = CompositeAudioClip(audio_clips)
         video = video.set_audio(composite_audio)
     else:
         pass
 
-    video.write_videofile("../final_video.mp4", codec="libx264", audio_codec="aac")
-    os.remove("output.mp4")
+    video.write_videofile(os.path.join(script_dir, "..", "final_video.mp4"), codec="libx264", audio_codec="aac")
+    os.remove(os.path.join(script_dir, "output.mp4"))
