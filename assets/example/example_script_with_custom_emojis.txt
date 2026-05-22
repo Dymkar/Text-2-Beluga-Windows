@@ -1,0 +1,11 @@
+WELCOME Billy$^1.5#!join  
+
+Billy:  
+Hello everyone! :custom_smile:$^2#!message  
+This is a test with custom emoji :custom_logo: and standard emoji 😀$^2#!softmessage  
+Just a custom emoji :custom_smile:$^1.5#!pop
+
+WELCOME Pizza$^1#!join  
+
+Pizza:  
+**Check out my custom logo** :custom_logo:$^2#!typing
