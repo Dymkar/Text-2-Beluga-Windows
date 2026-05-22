@@ -39,7 +39,7 @@ https://github.com/user-attachments/assets/60af59bf-b32b-4a31-bfa6-6605c86457e2
 
 1. Clone repository
     ```bash
-    git clone https://github.com/Binary-Bytes/Text-2-Beluga.git](https://github.com/Dymkar/Text-2-Beluga-Windows.git
+    git clone https://github.com/Binary-Bytes/Text-2-Beluga.git
     cd Text-2-Beluga-Windows
     ```
 
