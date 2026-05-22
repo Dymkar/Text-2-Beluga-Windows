@@ -18,6 +18,9 @@ except ImportError:
         return text.upper()
 
 
+# Get the directory where this script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Helper function to update header and description in a dedicated screen area.
 def draw_screen(stdscr, header, description, menu_items=None, current_row=None, left_margin=4):
     stdscr.clear()
@@ -64,14 +67,15 @@ def run_generate_chat(stdscr):
     # Initial header and description.
     draw_screen(stdscr, "Text 2 Beluga", "Select a chat script file...\n\n", menu_items=[])
     curses.napms(500)
-    
-    final_video = '../final_video.mp4'
+
+    final_video = os.path.join(script_dir, '..', 'final_video.mp4')
     if os.path.isfile(final_video):
         os.remove(final_video)
-    if os.path.exists('../chat'):
-        for file in os.listdir('../chat'):
-            os.remove(os.path.join('../chat', file))
-        os.rmdir('../chat')
+    chat_dir = os.path.join(script_dir, '..', 'chat')
+    if os.path.exists(chat_dir):
+        for file in os.listdir(chat_dir):
+            os.remove(os.path.join(chat_dir, file))
+        os.rmdir(chat_dir)
 
     filename = get_chat_filename()
     if not filename:
@@ -138,12 +142,12 @@ def run_validate_script(stdscr):
 
     draw_screen(stdscr, header, description + "\n\nPress Enter to return to the main menu...\n\n", menu_items=[])
     stdscr.getch()
-    
+
 ################################################
 ################################################
 ################################################
 ################################################
-    
+
 def print_instructions(stdscr, header, description, current_row, left_margin):
     menu_items = ["Proper Script Formatting", "Available Sound Effects", "< Back"]
     while True:
@@ -178,6 +182,7 @@ def formatting(stdscr, current_row, left_margin):
         "- Message text enclosed within ** and ** will be shown in bold.",
         "- Message text enclosed within __ and __ will be shown in italics.",
         "- Emojis are supported in messages.",
+        "- Custom emojis can be used by writing :emoji_name: where emoji_name is defined in [assets/custom_emojis/emoji_mapping.json].",
         "- Different characters can be mentioned in a message by writing \"@\" followed by a character's name.",
         "",
         "- An example script has been provided to give an idea and get you started.",
@@ -186,7 +191,7 @@ def formatting(stdscr, current_row, left_margin):
     ]
     header = "Formatting"
     description = "> Your chat script should be written in a [.txt] file with the following formatting guidelines:"
-    
+
     while True:
         draw_screen(stdscr, header, description, menu_items, current_row, left_margin)
         key = stdscr.getch()
@@ -198,18 +203,19 @@ def formatting(stdscr, current_row, left_margin):
         elif key in [curses.KEY_ENTER, 10, 13]:
             if current_row == (len(menu_items) - 1):
                 break
-            
+
 def sounds(stdscr, current_row, left_margin):
     header = "Sounds"
     description = "> Use the arrow keys to navigate through the available sound effects. Press [ENTER] to listen to the selected sound effect."
-    
+
     menu_items = []
-    for file in os.listdir(os.path.join("..", "assets", "sounds", "mp3")):
+    sounds_dir = os.path.join(script_dir, '..', 'assets', 'sounds', 'mp3')
+    for file in os.listdir(sounds_dir):
         if file.endswith(".mp3"):
             menu_items.append(file.replace(".mp3", ""))
     menu_items.append("                     ")
     menu_items.append("< Back")
-    
+
     while True:
         draw_screen(stdscr, header, description, menu_items, current_row, left_margin)
         key = stdscr.getch()
@@ -224,7 +230,7 @@ def sounds(stdscr, current_row, left_margin):
             elif current_row == (len(menu_items) - 2):
                 continue
             else:
-                playsound(f'{os.path.join("..", "assets", "sounds", "mp3", menu_items[current_row] + ".mp3")}')
+                playsound(os.path.join(script_dir, '..', 'assets', 'sounds', 'mp3', menu_items[current_row] + ".mp3"))
 
 ################################################
 ################################################

@@ -11,6 +11,32 @@ import re
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QFileDialog
 
+# Get the directory where this script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Load custom emoji mapping
+custom_emojis_dir = os.path.join(script_dir, '..', 'assets', 'custom_emojis')
+custom_emoji_mapping_path = os.path.join(custom_emojis_dir, 'emoji_mapping.json')
+custom_emoji_mapping = {}
+if os.path.exists(custom_emoji_mapping_path):
+    with open(custom_emoji_mapping_path, encoding='utf8') as f:
+        full_mapping = json.load(f)
+        # Filter out non-image entries (like 'description', 'examples')
+        custom_emoji_mapping = {k: v for k, v in full_mapping.items() 
+                                if isinstance(v, str) and (v.endswith('.png') or v.endswith('.jpg') or v.endswith('.jpeg') or v.endswith('.gif'))}
+    # Pre-load custom emoji images
+    custom_emoji_images = {}
+    for emoji_name, emoji_file in custom_emoji_mapping.items():
+        emoji_path = os.path.join(custom_emojis_dir, emoji_file)
+        if os.path.exists(emoji_path):
+            try:
+                img = Image.open(emoji_path)
+                custom_emoji_images[emoji_name] = img
+            except Exception:
+                pass  # Skip invalid images
+else:
+    custom_emoji_images = {}
+
 # CONSTANTS
 WORLD_WIDTH = 1777
 WORLD_Y_INIT_MESSAGE = 231
@@ -56,23 +82,39 @@ MESSAGE_POSITIONS = [(MESSAGE_X, MESSAGE_Y_INIT + i * MESSAGE_DY) for i in range
 
 # Load fonts
 font = "whitney" # Change this according to the font you want to use
-name_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'semibold.ttf'), NAME_FONT_SIZE)
-time_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'semibold.ttf'), TIME_FONT_SIZE)
-message_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'medium.ttf'), MESSAGE_FONT_SIZE)
-message_italic_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'medium_italic.ttf'), MESSAGE_FONT_SIZE)
-message_bold_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'bold.ttf'), MESSAGE_FONT_SIZE)
-message_italic_bold_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'bold_italic.ttf'), MESSAGE_FONT_SIZE)
-message_mention_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'semibold.ttf'), MESSAGE_FONT_SIZE)
-message_mention_italic_font = ImageFont.truetype(os.path.join(f'../assets/fonts/{font}', 'semibold_italic.ttf'), MESSAGE_FONT_SIZE)
+name_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'semibold.ttf'), NAME_FONT_SIZE)
+time_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'semibold.ttf'), TIME_FONT_SIZE)
+message_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'medium.ttf'), MESSAGE_FONT_SIZE)
+message_italic_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'medium_italic.ttf'), MESSAGE_FONT_SIZE)
+message_bold_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'bold.ttf'), MESSAGE_FONT_SIZE)
+message_italic_bold_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'bold_italic.ttf'), MESSAGE_FONT_SIZE)
+message_mention_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'semibold.ttf'), MESSAGE_FONT_SIZE)
+message_mention_italic_font = ImageFont.truetype(os.path.join(script_dir, '..', 'assets', 'fonts', font, 'semibold_italic.ttf'), MESSAGE_FONT_SIZE)
 
 # Load profile picture dictionary
-with open('../assets/profile_pictures/characters.json', encoding="utf8") as file:
+with open(os.path.join(script_dir, '..', 'assets', 'profile_pictures', 'characters.json'), encoding="utf8") as file:
     characters_dict = json.load(file)
 
 
 def is_emoji_message(message):
-    """Return True if the message contains only emoji characters."""
-    return bool(message) and all(regex.match(r'^\p{Emoji}+$', char) for char in message.strip())
+    """Return True if the message contains only emoji characters or custom emoji names."""
+    stripped = message.strip()
+    # Check if it's a single custom emoji name
+    if stripped in custom_emoji_images:
+        return True
+    # Check if all characters are standard emojis
+    return bool(stripped) and all(regex.match(r'^\p{Emoji}+$', char) for char in stripped)
+
+
+def replace_custom_emojis(message):
+    """Replace custom emoji placeholders like :custom_name: with special markers."""
+    result = message
+    for emoji_name in custom_emoji_images.keys():
+        placeholder = f":{emoji_name}:"
+        if placeholder in result:
+            # Replace with a unique marker that we'll handle during rendering
+            result = result.replace(placeholder, f"\x00CUSTOM_EMOJI_{emoji_name}\x00")
+    return result
 
 
 def generate_chat(messages, name_time, profpic_file, color):
@@ -82,7 +124,7 @@ def generate_chat(messages, name_time, profpic_file, color):
     """
     name_text = name_time[0]
     time_text = f'Today at {name_time[1]} PM'
-    
+
     # Calculate baseline-aligned time position
     name_ascent, _ = name_font.getmetrics()
     time_ascent, _ = time_font.getmetrics()
@@ -91,13 +133,13 @@ def generate_chat(messages, name_time, profpic_file, color):
         NAME_POSITION[0] + name_font.getbbox(name_text)[2] + NAME_TIME_SPACING,
         baseline_y - time_ascent
     )
-    
+
     # Open and process profile picture
     prof_pic = Image.open(profpic_file)
     prof_pic.thumbnail((sys.maxsize, PROFPIC_WIDTH), Image.ANTIALIAS)
     mask = Image.new("L", prof_pic.size, 0)
     ImageDraw.Draw(mask).ellipse([(0, 0), (PROFPIC_WIDTH, PROFPIC_WIDTH)], fill=255)
-    
+
     # Adjust vertical size for emoji-only messages
     y_increment = 0
     for msg in messages:
@@ -109,7 +151,7 @@ def generate_chat(messages, name_time, profpic_file, color):
     template = Image.new(mode='RGBA', size=(WORLD_WIDTH, total_height), color=WORLD_COLOR)
     template.paste(prof_pic, PROFPIC_POSITION, mask)
     draw_template = ImageDraw.Draw(template)
-    
+
     draw_template.text(NAME_POSITION, name_text, color, font=name_font)
     draw_template.text(time_position, time_text, TIME_FONT_COLOR, font=time_font)
 
@@ -119,19 +161,31 @@ def generate_chat(messages, name_time, profpic_file, color):
         if not message:
             continue
 
+        # Replace custom emoji placeholders with markers
+        processed_message = replace_custom_emojis(message)
+
         x, base_y = MESSAGE_POSITIONS[i]
         y_pos = base_y + y_offset
         current_x = x
 
-        if is_emoji_message(message):
+        if is_emoji_message(processed_message):
+            # Check if it's a single custom emoji
+            if processed_message.startswith('\x00CUSTOM_EMOJI_') and processed_message.endswith('\x00'):
+                emoji_name = processed_message.strip('\x00').replace('CUSTOM_EMOJI_', '')
+                if emoji_name in custom_emoji_images:
+                    img = custom_emoji_images[emoji_name].copy()
+                    img.thumbnail((80, 80), Image.ANTIALIAS)
+                    template.paste(img, (current_x, y_pos), img if img.mode == 'RGBA' else None)
+                    y_offset += 80
+                    continue
             with Pilmoji(template) as pilmoji:
-                pilmoji.text((current_x, y_pos), message, MESSAGE_FONT_COLOR, font=message_font,
+                pilmoji.text((current_x, y_pos), processed_message, MESSAGE_FONT_COLOR, font=message_font,
                              emoji_position_offset=(0, 8), emoji_scale_factor=2)
-            y_offset += message_font.getbbox(message)[3]
+            y_offset += message_font.getbbox(processed_message)[3]
             continue
 
-        # Tokenize for bold (**), italic (__), and mentions (@...)
-        tokens = re.split(r'(\*\*|__)', message)
+        # Tokenize for bold (**), italic (__), and mentions (@...), and custom emojis
+        tokens = re.split(r'(\*\*|__)', processed_message)
         bold = italic = False
         with Pilmoji(template) as pilmoji:
             for token in tokens:
@@ -142,10 +196,19 @@ def generate_chat(messages, name_time, profpic_file, color):
                 else:
                     if not token:
                         continue
-                    # Split further by mentions
-                    parts = re.split(r'(@\w+)', token)
+                    # Split further by mentions and custom emojis
+                    parts = re.split(r'(@\w+|\x00CUSTOM_EMOJI_[^\x00]+\x00)', token)
                     for part in parts:
                         if not part:
+                            continue
+                        # Check if this is a custom emoji marker
+                        if part.startswith('\x00CUSTOM_EMOJI_') and part.endswith('\x00'):
+                            emoji_name = part.strip('\x00').replace('CUSTOM_EMOJI_', '')
+                            if emoji_name in custom_emoji_images:
+                                img = custom_emoji_images[emoji_name].copy()
+                                img.thumbnail((40, 40), Image.ANTIALIAS)
+                                template.paste(img, (current_x, y_pos - 5), img if img.mode == 'RGBA' else None)
+                                current_x += img.width + 5
                             continue
                         if part.startswith('@'):
                             # Choose font for mentions (mentions are always semibold)
@@ -195,11 +258,11 @@ def generate_joined_message(name, time, template_str, arrow_x, color=NAME_FONT_C
     """
     before_text, after_text = template_str.split("CHARACTER", 1) if "CHARACTER" in template_str else ("", "")
     time_text = f'Today at {time} PM'
-    
+
     template_img = Image.new(mode='RGBA', size=(WORLD_WIDTH, WORLD_HEIGHT_JOINED), color=WORLD_COLOR)
     draw_template = ImageDraw.Draw(template_img)
-    
-    arrow = Image.open("../assets/green_arrow.png")
+
+    arrow = Image.open(os.path.join(script_dir, '..', 'assets', 'green_arrow.png'))
     arrow.thumbnail((40, 40))
     text_x = arrow_x + arrow.width + 60
 
@@ -211,7 +274,7 @@ def generate_joined_message(name, time, template_str, arrow_x, color=NAME_FONT_C
     arrow_y = text_y + (total_text_height - arrow.height) // 2
 
     template_img.paste(arrow, (arrow_x, arrow_y), arrow)
-    
+
     before_width = message_font.getbbox(before_text)[2] if before_text else 0
     name_width = name_font.getbbox(name)[2]
     with Pilmoji(template_img) as pilmoji:
@@ -222,13 +285,13 @@ def generate_joined_message(name, time, template_str, arrow_x, color=NAME_FONT_C
         if after_text:
             after_x = name_x + name_width
             pilmoji.text((after_x, text_y), after_text, JOINED_FONT_COLOR, font=message_font)
-        
+
         total_msg_width = before_width + name_width + message_font.getbbox(after_text)[2]
         time_x = text_x + total_msg_width + 30
         time_baseline = text_y + message_ascent
         time_y = time_baseline - time_font.getmetrics()[0]
         pilmoji.text((time_x, time_y), time_text, TIME_FONT_COLOR, font=time_font)
-    
+
     return template_img
 
 
@@ -238,14 +301,14 @@ def generate_joined_message_stack(joined_messages, hour):
     """
     total_height = WORLD_HEIGHT_JOINED * len(joined_messages)
     template_img = Image.new(mode='RGBA', size=(WORLD_WIDTH, total_height), color=WORLD_COLOR)
-    
+
     for idx, key in enumerate(joined_messages):
         name = key.split(' ')[1].split('$^')[0]
         color = characters_dict[name]["role_color"]
         time_str = f'{hour}:{joined_messages[key][2].minute:02d}'
         joined_img = generate_joined_message(name, time_str, joined_messages[key][0], joined_messages[key][1], color)
         template_img.paste(joined_img, (0, idx * WORLD_HEIGHT_JOINED))
-    
+
     return template_img
 
 
@@ -260,7 +323,8 @@ def get_filename():
 
 
 def save_images(lines, init_time, dt=30):
-    os.makedirs('../chat', exist_ok=True)
+    chat_dir = os.path.join(script_dir, '..', 'chat')
+    os.makedirs(chat_dir, exist_ok=True)
 
     name_up_next = True
     current_time = init_time
@@ -286,7 +350,7 @@ def save_images(lines, init_time, dt=30):
             joined_messages[line] = [random.choice(JOINED_TEXTS), random.randint(50, 80), current_time]
             hour = current_time.hour % 12 or 12
             image = generate_joined_message_stack(joined_messages, hour)
-            image.save(f'../chat/{msg_number:03d}.png')
+            image.save(os.path.join(chat_dir, f'{msg_number:03d}.png'))
             current_time += datetime.timedelta(seconds=dt)
             msg_number += 1
             continue
@@ -304,23 +368,23 @@ def save_images(lines, init_time, dt=30):
         image = generate_chat(
             messages=current_lines,
             name_time=name_time,
-            profpic_file=os.path.join('../assets/profile_pictures', characters_dict[current_name]["profile_pic"]),
+            profpic_file=os.path.join(script_dir, '..', 'assets', 'profile_pictures', characters_dict[current_name]["profile_pic"]),
             color=characters_dict[current_name]["role_color"]
         )
-        image.save(f'../chat/{msg_number:03d}.png')
+        image.save(os.path.join(chat_dir, f'{msg_number:03d}.png'))
         current_time += datetime.timedelta(seconds=dt)
         msg_number += 1
 
 
 if __name__ == '__main__':
     """
-    final_video = '../final_video.mp4'
+    final_video = os.path.join(script_dir, '..', 'final_video.mp4')
     if os.path.isfile(final_video):
         os.remove(final_video)
-    if os.path.exists('../chat'):
-        for file in os.listdir('../chat'):
-            os.remove(os.path.join('../chat', file))
-        os.rmdir('../chat')
+    if os.path.exists(chat_dir):
+        for file in os.listdir(chat_dir):
+            os.remove(os.path.join(chat_dir, file))
+        os.rmdir(chat_dir)
 
     filename = get_filename()
     with open(filename, encoding="utf8") as f:
@@ -333,5 +397,5 @@ if __name__ == '__main__':
     from compile_images import gen_vid
     gen_vid(filename)
     """
-    
+
     print('Please run the main.py script!')

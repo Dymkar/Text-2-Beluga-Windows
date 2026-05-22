@@ -14,7 +14,8 @@ https://github.com/user-attachments/assets/60af59bf-b32b-4a31-bfa6-6605c86457e2
 - 📝 **Script Validation** - Built-in script error checking
 - 😎 **Advanced Formatting** Supports:
     - **Bold** and *italic* text
-    - Emojis are supported
+    - Standard emojis (Unicode)
+    - Custom emoji images via configuration
     - Mention other characters (`@Character`)
     - Custom durations per message
     - Create custom characters
@@ -45,6 +46,11 @@ https://github.com/user-attachments/assets/60af59bf-b32b-4a31-bfa6-6605c86457e2
 3. Configure character settings 
     - Add profile pictures in `assets/profile_pictures/temp/`
     - Character details in `assets/profile_pictures/characters.json`
+
+4. Add custom emojis (optional)
+    - Place emoji images in `assets/custom_emojis/`
+    - Map emoji names to files in `assets/custom_emojis/emoji_mapping.json`
+    - Use in scripts with `:emoji_name:` syntax
 
 ## Chat Script Format 📜
 
@@ -79,7 +85,8 @@ Another Message$^Duration
     - Italic: `__text__`
     - Combine: `__**text**__`
     - Mention: `@Character`
-    - Emojis: `Emojis are supported in messages`
+    - Standard Emojis: Any Unicode emoji (😀, 💀, etc.)
+    - Custom Emojis: `:emoji_name:` where `emoji_name` is defined in `assets/custom_emojis/emoji_mapping.json`
     - Durations: `$^` followed by duration in seconds (must be present at end of each message line, before sound effect, **mandatory**)
     - Sound Effects: `#!` followed by exact name (must be present at end of each message line, **optional**)
 
