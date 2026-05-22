@@ -14,29 +14,6 @@ from PyQt5.QtWidgets import QFileDialog
 # Get the directory where this script is located
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Load custom emoji mapping
-custom_emojis_dir = os.path.join(script_dir, '..', 'assets', 'custom_emojis')
-custom_emoji_mapping_path = os.path.join(custom_emojis_dir, 'emoji_mapping.json')
-custom_emoji_mapping = {}
-if os.path.exists(custom_emoji_mapping_path):
-    with open(custom_emoji_mapping_path, encoding='utf8') as f:
-        full_mapping = json.load(f)
-        # Filter out non-image entries (like 'description', 'examples')
-        custom_emoji_mapping = {k: v for k, v in full_mapping.items() 
-                                if isinstance(v, str) and (v.endswith('.png') or v.endswith('.jpg') or v.endswith('.jpeg') or v.endswith('.gif'))}
-    # Pre-load custom emoji images
-    custom_emoji_images = {}
-    for emoji_name, emoji_file in custom_emoji_mapping.items():
-        emoji_path = os.path.join(custom_emojis_dir, emoji_file)
-        if os.path.exists(emoji_path):
-            try:
-                img = Image.open(emoji_path)
-                custom_emoji_images[emoji_name] = img
-            except Exception:
-                pass  # Skip invalid images
-else:
-    custom_emoji_images = {}
-
 # CONSTANTS
 WORLD_WIDTH = 1777
 WORLD_Y_INIT_MESSAGE = 231
