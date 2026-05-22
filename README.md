@@ -105,7 +105,7 @@ Another Message$^Duration
 3. The following options will be presented:
     - ***Generate Video:*** Generate the chat video
     - ***Validate Script:*** Check for errors in the script file `(will be enhanced)`
-    - ***Instructions:*** Read all the instructions for chat file syntax, or listen to all the sound effects available by default... _to add a custom sound effect, add it's `.mp3` version in `assets/sounds/mp3/`_
+    - ***Instructions:*** Read all the instructions for chat file syntax, or listen to all the sound effects available by default... _to add a custom sound effect, add it's `.mp3` version in `assets/sounds/mp3/` (CURRENTLY BROKEN)_
     - ***Exit:*** Close the program
 
 4. When "`Generate Video`" is selected, it will take a few seconds to generate the chat images in `chat/` directory and compile them into a video with sound effects as `final_video.mp4` in the root directory.
