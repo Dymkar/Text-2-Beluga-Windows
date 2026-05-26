@@ -182,6 +182,7 @@ def formatting(stdscr, current_row, left_margin):
         "- Message text enclosed within ** and ** will be shown in bold.",
         "- Message text enclosed within __ and __ will be shown in italics.",
         "- Emojis are supported in messages.",
+        "- Custom emojis can be used by writing :emoji_name: where emoji_name is defined in [assets/custom_emojis/emoji_mapping.json].",
         "- Different characters can be mentioned in a message by writing \"@\" followed by a character's name.",
         "",
         "- An example script has been provided to give an idea and get you started.",

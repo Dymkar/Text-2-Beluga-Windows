@@ -74,6 +74,7 @@ with open(os.path.join(script_dir, '..', 'assets', 'profile_pictures', 'characte
 
 
 def is_emoji_message(message):
+<<<<<<< HEAD
     """Return True if the message contains only emoji characters."""
     pattern = re.compile(r'^(?:[\U0001f300-\U0001f64f]|[\U0001f680-\U0001f6ff]|<:\w+:\d+>)+$')
     word_pattern = re.compile(r'^(?:' + pattern.pattern + r')+$')
@@ -81,6 +82,26 @@ def is_emoji_message(message):
         return False
     words = message.strip().split()
     return all(word_pattern.fullmatch(w) for w in words)
+=======
+    """Return True if the message contains only emoji characters or custom emoji names."""
+    stripped = message.strip()
+    # Check if it's a single custom emoji name
+    if stripped in custom_emoji_images:
+        return True
+    # Check if all characters are standard emojis
+    return bool(stripped) and all(regex.match(r'^\p{Emoji}+$', char) for char in stripped)
+
+
+def replace_custom_emojis(message):
+    """Replace custom emoji placeholders like :custom_name: with special markers."""
+    result = message
+    for emoji_name in custom_emoji_images.keys():
+        placeholder = f":{emoji_name}:"
+        if placeholder in result:
+            # Replace with a unique marker that we'll handle during rendering
+            result = result.replace(placeholder, f"\x00CUSTOM_EMOJI_{emoji_name}\x00")
+    return result
+>>>>>>> 663c94dc80a1ab9b516cef92d040a62d59021ce5
 
 
 def generate_chat(messages, name_time, profpic_file, color):
@@ -127,19 +148,31 @@ def generate_chat(messages, name_time, profpic_file, color):
         if not message:
             continue
 
+        # Replace custom emoji placeholders with markers
+        processed_message = replace_custom_emojis(message)
+
         x, base_y = MESSAGE_POSITIONS[i]
         y_pos = base_y + y_offset
         current_x = x
 
-        if is_emoji_message(message):
+        if is_emoji_message(processed_message):
+            # Check if it's a single custom emoji
+            if processed_message.startswith('\x00CUSTOM_EMOJI_') and processed_message.endswith('\x00'):
+                emoji_name = processed_message.strip('\x00').replace('CUSTOM_EMOJI_', '')
+                if emoji_name in custom_emoji_images:
+                    img = custom_emoji_images[emoji_name].copy()
+                    img.thumbnail((80, 80), Image.ANTIALIAS)
+                    template.paste(img, (current_x, y_pos), img if img.mode == 'RGBA' else None)
+                    y_offset += 80
+                    continue
             with Pilmoji(template) as pilmoji:
-                pilmoji.text((current_x, y_pos), message, MESSAGE_FONT_COLOR, font=message_font,
+                pilmoji.text((current_x, y_pos), processed_message, MESSAGE_FONT_COLOR, font=message_font,
                              emoji_position_offset=(0, 8), emoji_scale_factor=2)
-            y_offset += message_font.getbbox(message)[3]
+            y_offset += message_font.getbbox(processed_message)[3]
             continue
 
-        # Tokenize for bold (**), italic (__), and mentions (@...)
-        tokens = re.split(r'(\*\*|__)', message)
+        # Tokenize for bold (**), italic (__), and mentions (@...), and custom emojis
+        tokens = re.split(r'(\*\*|__)', processed_message)
         bold = italic = False
         with Pilmoji(template) as pilmoji:
             for token in tokens:
@@ -150,10 +183,19 @@ def generate_chat(messages, name_time, profpic_file, color):
                 else:
                     if not token:
                         continue
-                    # Split further by mentions
-                    parts = re.split(r'(@\w+)', token)
+                    # Split further by mentions and custom emojis
+                    parts = re.split(r'(@\w+|\x00CUSTOM_EMOJI_[^\x00]+\x00)', token)
                     for part in parts:
                         if not part:
+                            continue
+                        # Check if this is a custom emoji marker
+                        if part.startswith('\x00CUSTOM_EMOJI_') and part.endswith('\x00'):
+                            emoji_name = part.strip('\x00').replace('CUSTOM_EMOJI_', '')
+                            if emoji_name in custom_emoji_images:
+                                img = custom_emoji_images[emoji_name].copy()
+                                img.thumbnail((40, 40), Image.ANTIALIAS)
+                                template.paste(img, (current_x, y_pos - 5), img if img.mode == 'RGBA' else None)
+                                current_x += img.width + 5
                             continue
                         if part.startswith('@'):
                             # Choose font for mentions (mentions are always semibold)
