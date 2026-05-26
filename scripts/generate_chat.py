@@ -74,7 +74,6 @@ with open(os.path.join(script_dir, '..', 'assets', 'profile_pictures', 'characte
 
 
 def is_emoji_message(message):
-<<<<<<< HEAD
     """Return True if the message contains only emoji characters."""
     pattern = re.compile(r'^(?:[\U0001f300-\U0001f64f]|[\U0001f680-\U0001f6ff]|<:\w+:\d+>)+$')
     word_pattern = re.compile(r'^(?:' + pattern.pattern + r')+$')
@@ -82,26 +81,6 @@ def is_emoji_message(message):
         return False
     words = message.strip().split()
     return all(word_pattern.fullmatch(w) for w in words)
-=======
-    """Return True if the message contains only emoji characters or custom emoji names."""
-    stripped = message.strip()
-    # Check if it's a single custom emoji name
-    if stripped in custom_emoji_images:
-        return True
-    # Check if all characters are standard emojis
-    return bool(stripped) and all(regex.match(r'^\p{Emoji}+$', char) for char in stripped)
-
-
-def replace_custom_emojis(message):
-    """Replace custom emoji placeholders like :custom_name: with special markers."""
-    result = message
-    for emoji_name in custom_emoji_images.keys():
-        placeholder = f":{emoji_name}:"
-        if placeholder in result:
-            # Replace with a unique marker that we'll handle during rendering
-            result = result.replace(placeholder, f"\x00CUSTOM_EMOJI_{emoji_name}\x00")
-    return result
->>>>>>> 663c94dc80a1ab9b516cef92d040a62d59021ce5
 
 
 def generate_chat(messages, name_time, profpic_file, color):
