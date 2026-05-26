@@ -1,8 +1,8 @@
 # DONE
-- fix only emojis message template
+- fix only emojis message template - Redone it
 - fix timestamp not incrementing in joined messages
 - fix timestamp on message incrementing when not needed
-- optimize code
+- optimize code - Should be more optimized now too
 - make a script validator
 - good cmd-line user interface
 - write a README file
