@@ -1,0 +1,9 @@
+Wind:
+wind$^1#!message
+noises$^2#!message
+
+Mario:
+must've been the wind$^2#!message
+
+Wind:
+this was NOT me 🥀$^3#!message

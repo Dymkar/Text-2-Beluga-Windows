@@ -1,11 +1,13 @@
 WELCOME Billy$^1.5#!join  
 
 Billy:  
-Hello everyone! :custom_smile:$^2#!message  
-This is a test with custom emoji :custom_logo: and standard emoji 😀$^2#!softmessage  
-Just a custom emoji :custom_smile:$^1.5#!pop
+Hello everyone!$^2#!message  
+👀$^2#!message 
+<:hikerwario:1499814372820783294>$^2#!softmessage  
+<:hikerwario:1499814372820783294> <:hikerwario:1499814372820783294> <:hikerwario:1499814372820783294>$^0.3#!message
+<:hikerwario:1499814372820783294> <:hikerwario:1499814372820783294> <:hikerwario:1499814372820783294> <:hikerwario:1499814372820783294>$^2#!message
 
 WELCOME Pizza$^1#!join  
 
 Pizza:  
-**Check out my custom logo** :custom_logo:$^2#!typing
+**Check out my custom wario** <:hikerwario:1499814372820783294>$^2#!typing

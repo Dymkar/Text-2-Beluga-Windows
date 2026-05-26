@@ -75,7 +75,12 @@ with open(os.path.join(script_dir, '..', 'assets', 'profile_pictures', 'characte
 
 def is_emoji_message(message):
     """Return True if the message contains only emoji characters."""
-    return bool(message) and all(regex.match(r'^\p{Emoji}+$', char) for char in message.strip())
+    pattern = re.compile(r'^(?:[\U0001f300-\U0001f64f]|[\U0001f680-\U0001f6ff]|<:\w+:\d+>)+$')
+    word_pattern = re.compile(r'^(?:' + pattern.pattern + r')+$')
+    if not message or not message.strip():
+        return False
+    words = message.strip().split()
+    return all(word_pattern.fullmatch(w) for w in words)
 
 
 def generate_chat(messages, name_time, profpic_file, color):
@@ -106,7 +111,7 @@ def generate_chat(messages, name_time, profpic_file, color):
     for msg in messages:
         if is_emoji_message(msg):
             bbox = message_font.getbbox("💀")
-            y_increment += (bbox[3] - bbox[1]) + 8
+            y_increment += (bbox[3] - bbox[1]) + 40
 
     total_height = WORLD_HEIGHTS_MESSAGE[len(messages) - 1] + y_increment
     template = Image.new(mode='RGBA', size=(WORLD_WIDTH, total_height), color=WORLD_COLOR)
