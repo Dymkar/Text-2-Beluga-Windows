@@ -1,0 +1,5 @@
+{
+    "description": "Custom emoji mapping. Add your custom emojis here by mapping a name to an image file in the assets/custom_emojis folder.",
+    "custom_smile": "smile.png",
+    "custom_logo": "logo.png"
+}
