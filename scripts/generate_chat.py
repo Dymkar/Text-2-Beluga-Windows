@@ -127,31 +127,19 @@ def generate_chat(messages, name_time, profpic_file, color):
         if not message:
             continue
 
-        # Replace custom emoji placeholders with markers
-        processed_message = replace_custom_emojis(message)
-
         x, base_y = MESSAGE_POSITIONS[i]
         y_pos = base_y + y_offset
         current_x = x
 
-        if is_emoji_message(processed_message):
-            # Check if it's a single custom emoji
-            if processed_message.startswith('\x00CUSTOM_EMOJI_') and processed_message.endswith('\x00'):
-                emoji_name = processed_message.strip('\x00').replace('CUSTOM_EMOJI_', '')
-                if emoji_name in custom_emoji_images:
-                    img = custom_emoji_images[emoji_name].copy()
-                    img.thumbnail((80, 80), Image.ANTIALIAS)
-                    template.paste(img, (current_x, y_pos), img if img.mode == 'RGBA' else None)
-                    y_offset += 80
-                    continue
+        if is_emoji_message(message):
             with Pilmoji(template) as pilmoji:
-                pilmoji.text((current_x, y_pos), processed_message, MESSAGE_FONT_COLOR, font=message_font,
+                pilmoji.text((current_x, y_pos), message, MESSAGE_FONT_COLOR, font=message_font,
                              emoji_position_offset=(0, 8), emoji_scale_factor=2)
-            y_offset += message_font.getbbox(processed_message)[3]
+            y_offset += message_font.getbbox(message)[3]
             continue
 
-        # Tokenize for bold (**), italic (__), and mentions (@...), and custom emojis
-        tokens = re.split(r'(\*\*|__)', processed_message)
+        # Tokenize for bold (**), italic (__), and mentions (@...)
+        tokens = re.split(r'(\*\*|__)', message)
         bold = italic = False
         with Pilmoji(template) as pilmoji:
             for token in tokens:
@@ -162,19 +150,10 @@ def generate_chat(messages, name_time, profpic_file, color):
                 else:
                     if not token:
                         continue
-                    # Split further by mentions and custom emojis
-                    parts = re.split(r'(@\w+|\x00CUSTOM_EMOJI_[^\x00]+\x00)', token)
+                    # Split further by mentions
+                    parts = re.split(r'(@\w+)', token)
                     for part in parts:
                         if not part:
-                            continue
-                        # Check if this is a custom emoji marker
-                        if part.startswith('\x00CUSTOM_EMOJI_') and part.endswith('\x00'):
-                            emoji_name = part.strip('\x00').replace('CUSTOM_EMOJI_', '')
-                            if emoji_name in custom_emoji_images:
-                                img = custom_emoji_images[emoji_name].copy()
-                                img.thumbnail((40, 40), Image.ANTIALIAS)
-                                template.paste(img, (current_x, y_pos - 5), img if img.mode == 'RGBA' else None)
-                                current_x += img.width + 5
                             continue
                         if part.startswith('@'):
                             # Choose font for mentions (mentions are always semibold)
