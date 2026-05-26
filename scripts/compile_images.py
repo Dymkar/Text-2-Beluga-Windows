@@ -44,7 +44,7 @@ def gen_vid(filename):
             count += 1
         file.write(f"file '{os.path.join(input_folder, image_files[-1])}'\noutpoint 0.04\n")
 
-    video_width, video_height = 1280, 720
+    video_width, video_height = 1920, 1080
     ffmpeg_cmd = (
         f"ffmpeg -f concat -safe 0 -i {os.path.join(script_dir, 'image_paths.txt')} -vcodec libx264 -r 25 -crf 25 "
         f"-vf \"scale={video_width}:{video_height}:force_original_aspect_ratio=decrease,"

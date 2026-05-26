@@ -3,6 +3,18 @@
         "profile_pic": "perm/billy.jpeg",
         "role_color": "#ffffff"
     },
+    "Wind": {
+        "profile_pic": "perm/wind.png",
+        "role_color": "#ffffff"
+    },
+    "Mario": {
+        "profile_pic": "perm/mario.png",
+        "role_color": "#ffffff"
+    },
+    "Luigi": {
+        "profile_pic": "perm/luigi.png",
+        "role_color": "#ffffff"
+    },
     "Pizza": {
         "profile_pic": "perm/pizza.jpeg",
         "role_color": "#ffcc6e"

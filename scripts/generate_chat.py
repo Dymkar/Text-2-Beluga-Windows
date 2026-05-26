@@ -102,7 +102,7 @@ def generate_chat(messages, name_time, profpic_file, color):
 
     # Open and process profile picture
     prof_pic = Image.open(profpic_file)
-    prof_pic.thumbnail((sys.maxsize, PROFPIC_WIDTH), Image.ANTIALIAS)
+    prof_pic.thumbnail((sys.maxsize, PROFPIC_WIDTH))
     mask = Image.new("L", prof_pic.size, 0)
     ImageDraw.Draw(mask).ellipse([(0, 0), (PROFPIC_WIDTH, PROFPIC_WIDTH)], fill=255)
 
